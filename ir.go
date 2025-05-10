@@ -19,6 +19,7 @@ package llvm
 #include <stdlib.h>
 */
 import "C"
+
 import (
 	"errors"
 	"unsafe"
@@ -99,9 +100,11 @@ func llvmValueRefPtr(t *Value) *C.LLVMValueRef { return (*C.LLVMValueRef)(unsafe
 func llvmMetadataRefPtr(t *Metadata) *C.LLVMMetadataRef {
 	return (*C.LLVMMetadataRef)(unsafe.Pointer(t))
 }
+
 func llvmBasicBlockRefPtr(t *BasicBlock) *C.LLVMBasicBlockRef {
 	return (*C.LLVMBasicBlockRef)(unsafe.Pointer(t))
 }
+
 func boolToLLVMBool(b bool) C.LLVMBool {
 	if b {
 		return C.LLVMBool(1)
@@ -484,6 +487,7 @@ func (m Module) Target() string {
 	ctarget := C.LLVMGetTarget(m.C)
 	return C.GoString(ctarget)
 }
+
 func (m Module) SetTarget(target string) {
 	ctarget := C.CString(target)
 	defer C.free(unsafe.Pointer(ctarget))
@@ -672,10 +676,12 @@ func ArrayType(elementType Type, elementCount int) (t Type) {
 	t.C = C.LLVMArrayType(elementType.C, C.unsigned(elementCount))
 	return
 }
+
 func PointerType(elementType Type, addressSpace int) (t Type) {
 	t.C = C.LLVMPointerType(elementType.C, C.unsigned(addressSpace))
 	return
 }
+
 func VectorType(elementType Type, elementCount int) (t Type) {
 	t.C = C.LLVMVectorType(elementType.C, C.unsigned(elementCount))
 	return
@@ -710,6 +716,7 @@ func (v Value) Metadata(kind int) (rv Value) {
 	rv.C = C.LLVMGetMetadata(v.C, C.unsigned(kind))
 	return
 }
+
 func (v Value) SetMetadata(kind int, node Metadata) {
 	C.LLVMSetMetadata2(v.C, C.unsigned(kind), node.C)
 }
@@ -818,11 +825,13 @@ func (c Context) MDString(str string) (md Metadata) {
 	md.C = C.LLVMMDString2(c.C, cstr, C.unsigned(len(str)))
 	return
 }
+
 func (c Context) MDNode(mds []Metadata) (md Metadata) {
 	ptr, nvals := llvmMetadataRefs(mds)
 	md.C = C.LLVMMDNode2(c.C, ptr, nvals)
 	return
 }
+
 func (v Value) ConstantAsMetadata() (md Metadata) {
 	md.C = C.LLVMConstantAsMetadata(v.C)
 	return
@@ -835,16 +844,19 @@ func ConstInt(t Type, n uint64, signExtend bool) (v Value) {
 		boolToLLVMBool(signExtend))
 	return
 }
+
 func ConstIntFromString(t Type, str string, radix int) (v Value) {
 	cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(cstr))
 	v.C = C.LLVMConstIntOfString(t.C, cstr, C.uint8_t(radix))
 	return
 }
+
 func ConstFloat(t Type, n float64) (v Value) {
 	v.C = C.LLVMConstReal(t.C, C.double(n))
 	return
 }
+
 func ConstFloatFromString(t Type, str string) (v Value) {
 	cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(cstr))
@@ -868,17 +880,20 @@ func (c Context) ConstString(str string, addnull bool) (v Value) {
 		C.unsigned(len(str)), boolToLLVMBool(!addnull))
 	return
 }
+
 func (c Context) ConstStruct(constVals []Value, packed bool) (v Value) {
 	ptr, nvals := llvmValueRefs(constVals)
 	v.C = C.LLVMConstStructInContext(c.C, ptr, nvals,
 		boolToLLVMBool(packed))
 	return
 }
+
 func ConstNamedStruct(t Type, constVals []Value) (v Value) {
 	ptr, nvals := llvmValueRefs(constVals)
 	v.C = C.LLVMConstNamedStruct(t.C, ptr, nvals)
 	return
 }
+
 func ConstString(str string, addnull bool) (v Value) {
 	cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(cstr))
@@ -886,16 +901,19 @@ func ConstString(str string, addnull bool) (v Value) {
 		C.unsigned(len(str)), boolToLLVMBool(!addnull))
 	return
 }
+
 func ConstArray(t Type, constVals []Value) (v Value) {
 	ptr, nvals := llvmValueRefs(constVals)
 	v.C = C.LLVMConstArray(t.C, ptr, nvals)
 	return
 }
+
 func ConstStruct(constVals []Value, packed bool) (v Value) {
 	ptr, nvals := llvmValueRefs(constVals)
 	v.C = C.LLVMConstStruct(ptr, nvals, boolToLLVMBool(packed))
 	return
 }
+
 func ConstVector(scalarConstVals []Value, packed bool) (v Value) {
 	ptr, nvals := llvmValueRefs(scalarConstVals)
 	v.C = C.LLVMConstVector(ptr, nvals)
@@ -938,6 +956,7 @@ func ConstGEP(t Type, v Value, indices []Value) (rv Value) {
 	rv.C = C.LLVMConstGEP2(t.C, v.C, ptr, nvals)
 	return
 }
+
 func ConstInBoundsGEP(t Type, v Value, indices []Value) (rv Value) {
 	ptr, nvals := llvmValueRefs(indices)
 	rv.C = C.LLVMConstInBoundsGEP2(t.C, v.C, ptr, nvals)
@@ -956,10 +975,12 @@ func ConstExtractElement(vec, i Value) (rv Value) {
 	rv.C = C.LLVMConstExtractElement(vec.C, i.C)
 	return
 }
+
 func ConstInsertElement(vec, elem, i Value) (rv Value) {
 	rv.C = C.LLVMConstInsertElement(vec.C, elem.C, i.C)
 	return
 }
+
 func ConstShuffleVector(veca, vecb, mask Value) (rv Value) {
 	rv.C = C.LLVMConstShuffleVector(veca.C, vecb.C, mask.C)
 	return
@@ -995,12 +1016,14 @@ func AddGlobal(m Module, t Type, name string) (v Value) {
 	v.C = C.LLVMAddGlobal(m.C, t.C, cname)
 	return
 }
+
 func AddGlobalInAddressSpace(m Module, t Type, name string, addressSpace int) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMAddGlobalInAddressSpace(m.C, t.C, cname, C.unsigned(addressSpace))
 	return
 }
+
 func (m Module) NamedGlobal(name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1029,15 +1052,19 @@ func (v Value) IsAtomicSingleThread() bool { return C.LLVMIsAtomicSingleThread(v
 func (v Value) SetAtomicSingleThread(singleThread bool) {
 	C.LLVMSetAtomicSingleThread(v.C, boolToLLVMBool(singleThread))
 }
+
 func (v Value) CmpXchgSuccessOrdering() AtomicOrdering {
 	return AtomicOrdering(C.LLVMGetCmpXchgSuccessOrdering(v.C))
 }
+
 func (v Value) SetCmpXchgSuccessOrdering(ordering AtomicOrdering) {
 	C.LLVMSetCmpXchgSuccessOrdering(v.C, C.LLVMAtomicOrdering(ordering))
 }
+
 func (v Value) CmpXchgFailureOrdering() AtomicOrdering {
 	return AtomicOrdering(C.LLVMGetCmpXchgFailureOrdering(v.C))
 }
+
 func (v Value) SetCmpXchgFailureOrdering(ordering AtomicOrdering) {
 	C.LLVMSetCmpXchgFailureOrdering(v.C, C.LLVMAtomicOrdering(ordering))
 }
@@ -1100,19 +1127,24 @@ func (v Value) SetGC(name string) {
 	defer C.free(unsafe.Pointer(cname))
 	C.LLVMSetGC(v.C, cname)
 }
+
 func (v Value) AddAttributeAtIndex(i int, a Attribute) {
 	C.LLVMAddAttributeAtIndex(v.C, C.LLVMAttributeIndex(i), a.C)
 }
+
 func (v Value) AddFunctionAttr(a Attribute) {
 	v.AddAttributeAtIndex(C.LLVMAttributeFunctionIndex, a)
 }
+
 func (v Value) GetEnumAttributeAtIndex(i int, kind uint) (a Attribute) {
 	a.C = C.LLVMGetEnumAttributeAtIndex(v.C, C.LLVMAttributeIndex(i), C.unsigned(kind))
 	return
 }
+
 func (v Value) GetEnumFunctionAttribute(kind uint) Attribute {
 	return v.GetEnumAttributeAtIndex(C.LLVMAttributeFunctionIndex, kind)
 }
+
 func (v Value) GetStringAttributeAtIndex(i int, kind string) (a Attribute) {
 	ckind := C.CString(kind)
 	defer C.free(unsafe.Pointer(ckind))
@@ -1120,18 +1152,22 @@ func (v Value) GetStringAttributeAtIndex(i int, kind string) (a Attribute) {
 		ckind, C.unsigned(len(kind)))
 	return
 }
+
 func (v Value) RemoveEnumAttributeAtIndex(i int, kind uint) {
 	C.LLVMRemoveEnumAttributeAtIndex(v.C, C.LLVMAttributeIndex(i), C.unsigned(kind))
 }
+
 func (v Value) RemoveEnumFunctionAttribute(kind uint) {
 	v.RemoveEnumAttributeAtIndex(C.LLVMAttributeFunctionIndex, kind)
 }
+
 func (v Value) RemoveStringAttributeAtIndex(i int, kind string) {
 	ckind := C.CString(kind)
 	defer C.free(unsafe.Pointer(ckind))
 	C.LLVMRemoveStringAttributeAtIndex(v.C, C.LLVMAttributeIndex(i),
 		ckind, C.unsigned(len(kind)))
 }
+
 func (v Value) AddTargetDependentFunctionAttr(attr, value string) {
 	cattr := C.CString(attr)
 	defer C.free(unsafe.Pointer(cattr))
@@ -1139,12 +1175,14 @@ func (v Value) AddTargetDependentFunctionAttr(attr, value string) {
 	defer C.free(unsafe.Pointer(cvalue))
 	C.LLVMAddTargetDependentFunctionAttr(v.C, cattr, cvalue)
 }
+
 func (v Value) SetPersonality(p Value) {
 	C.LLVMSetPersonalityFn(v.C, p.C)
 }
 
 // Operations on parameters
 func (v Value) ParamsCount() int { return int(C.LLVMCountParams(v.C)) }
+
 func (v Value) Params() []Value {
 	out := make([]Value, v.ParamsCount())
 	if len(out) > 0 {
@@ -1171,44 +1209,53 @@ func (v Value) BasicBlocks() []BasicBlock {
 	C.LLVMGetBasicBlocks(v.C, llvmBasicBlockRefPtr(&out[0]))
 	return out
 }
+
 func (v Value) FirstBasicBlock() (bb BasicBlock) {
 	bb.C = C.LLVMGetFirstBasicBlock(v.C)
 	return
 }
+
 func (v Value) LastBasicBlock() (bb BasicBlock) {
 	bb.C = C.LLVMGetLastBasicBlock(v.C)
 	return
 }
+
 func NextBasicBlock(bb BasicBlock) (rbb BasicBlock) {
 	rbb.C = C.LLVMGetNextBasicBlock(bb.C)
 	return
 }
+
 func PrevBasicBlock(bb BasicBlock) (rbb BasicBlock) {
 	rbb.C = C.LLVMGetPreviousBasicBlock(bb.C)
 	return
 }
+
 func (v Value) EntryBasicBlock() (bb BasicBlock) {
 	bb.C = C.LLVMGetEntryBasicBlock(v.C)
 	return
 }
+
 func (c Context) AddBasicBlock(f Value, name string) (bb BasicBlock) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	bb.C = C.LLVMAppendBasicBlockInContext(c.C, f.C, cname)
 	return
 }
+
 func (c Context) InsertBasicBlock(ref BasicBlock, name string) (bb BasicBlock) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	bb.C = C.LLVMInsertBasicBlockInContext(c.C, ref.C, cname)
 	return
 }
+
 func AddBasicBlock(f Value, name string) (bb BasicBlock) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	bb.C = C.LLVMAppendBasicBlock(f.C, cname)
 	return
 }
+
 func InsertBasicBlock(ref BasicBlock, name string) (bb BasicBlock) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1234,16 +1281,20 @@ func PrevInstruction(v Value) (rv Value)           { rv.C = C.LLVMGetPreviousIns
 func (v Value) SetInstructionCallConv(cc CallConv) {
 	C.LLVMSetInstructionCallConv(v.C, C.unsigned(cc))
 }
+
 func (v Value) InstructionCallConv() CallConv {
 	return CallConv(C.LLVMCallConv(C.LLVMGetInstructionCallConv(v.C)))
 }
+
 func (v Value) AddCallSiteAttribute(i int, a Attribute) {
 	C.LLVMAddCallSiteAttribute(v.C, C.LLVMAttributeIndex(i), a.C)
 }
+
 func (v Value) GetCallSiteEnumAttribute(i int, kind uint) (a Attribute) {
 	a.C = C.LLVMGetCallSiteEnumAttribute(v.C, C.LLVMAttributeIndex(i), C.unsigned(kind))
 	return
 }
+
 func (v Value) GetCallSiteStringAttribute(i int, kind string) (a Attribute) {
 	ckind := C.CString(kind)
 	defer C.free(unsafe.Pointer(ckind))
@@ -1251,13 +1302,16 @@ func (v Value) GetCallSiteStringAttribute(i int, kind string) (a Attribute) {
 		ckind, C.unsigned(len(kind)))
 	return
 }
+
 func (v Value) SetInstrParamAlignment(i int, align int) {
 	C.LLVMSetInstrParamAlignment(v.C, C.unsigned(i), C.unsigned(align))
 }
+
 func (v Value) CalledValue() (rv Value) {
 	rv.C = C.LLVMGetCalledValue(v.C)
 	return
 }
+
 func (v Value) CalledFunctionType() (t Type) {
 	t.C = C.LLVMGetCalledFunctionType(v.C)
 	return
@@ -1277,6 +1331,7 @@ func (v Value) IncomingValue(i int) (rv Value) {
 	rv.C = C.LLVMGetIncomingValue(v.C, C.unsigned(i))
 	return
 }
+
 func (v Value) IncomingBlock(i int) (bb BasicBlock) {
 	bb.C = C.LLVMGetIncomingBlock(v.C, C.unsigned(i))
 	return
@@ -1323,6 +1378,7 @@ func (v Value) AllocatedType() (t Type) { t.C = C.LLVMGetAllocatedType(v.C); ret
 // exclusive means of building instructions using the C interface.
 
 func (c Context) NewBuilder() (b Builder) { b.C = C.LLVMCreateBuilderInContext(c.C); return }
+
 func (b Builder) SetInsertPoint(block BasicBlock, instr Value) {
 	C.LLVMPositionBuilder(b.C, block.C, instr.C)
 }
@@ -1381,14 +1437,17 @@ func (b Builder) CreateCondBr(ifv Value, thenb, elseb BasicBlock) (rv Value) {
 	rv.C = C.LLVMBuildCondBr(b.C, ifv.C, thenb.C, elseb.C)
 	return
 }
+
 func (b Builder) CreateSwitch(v Value, elseb BasicBlock, numCases int) (rv Value) {
 	rv.C = C.LLVMBuildSwitch(b.C, v.C, elseb.C, C.unsigned(numCases))
 	return
 }
+
 func (b Builder) CreateIndirectBr(addr Value, numDests int) (rv Value) {
 	rv.C = C.LLVMBuildIndirectBr(b.C, addr.C, C.unsigned(numDests))
 	return
 }
+
 func (b Builder) CreateInvoke(t Type, fn Value, args []Value, then, catch BasicBlock, name string) (rv Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1437,6 +1496,7 @@ func (b Builder) CreateCleanupPad(parentPad Value, args []Value, name string) (v
 	v.C = C.LLVMBuildCleanupPad(b.C, parentPad.C, ptr, nvals, cname)
 	return
 }
+
 func (b Builder) CreateCatchSwitch(parentPad Value, unwindBB BasicBlock, numHandlers int, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1486,174 +1546,203 @@ func (b Builder) CreateAdd(lhs, rhs Value, name string) (v Value) {
 	v.C = C.LLVMBuildAdd(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNSWAdd(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNSWAdd(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNUWAdd(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNUWAdd(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFAdd(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFAdd(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateSub(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSub(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNSWSub(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNSWSub(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNUWSub(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNUWSub(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFSub(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	v.C = C.LLVMBuildFSub(b.C, lhs.C, rhs.C, cname)
 	C.free(unsafe.Pointer(cname))
 	return
 }
+
 func (b Builder) CreateMul(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildMul(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNSWMul(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNSWMul(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNUWMul(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildNUWMul(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFMul(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFMul(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateUDiv(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildUDiv(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateSDiv(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSDiv(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateExactSDiv(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildExactSDiv(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFDiv(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFDiv(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateURem(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildURem(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateSRem(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSRem(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFRem(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFRem(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateShl(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildShl(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateLShr(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildLShr(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateAShr(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildAShr(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateAnd(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildAnd(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateOr(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildOr(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateXor(lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildXor(b.C, lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateBinOp(op Opcode, lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildBinOp(b.C, C.LLVMOpcode(op), lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateNeg(v Value, name string) (rv Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	rv.C = C.LLVMBuildNeg(b.C, v.C, cname)
 	return
 }
+
 func (b Builder) CreateNSWNeg(v Value, name string) (rv Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	rv.C = C.LLVMBuildNSWNeg(b.C, v.C, cname)
 	return
 }
+
 func (b Builder) CreateFNeg(v Value, name string) (rv Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	rv.C = C.LLVMBuildFNeg(b.C, v.C, cname)
 	return
 }
+
 func (b Builder) CreateNot(v Value, name string) (rv Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1669,38 +1758,45 @@ func (b Builder) CreateMalloc(t Type, name string) (v Value) {
 	v.C = C.LLVMBuildMalloc(b.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateArrayMalloc(t Type, val Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildArrayMalloc(b.C, t.C, val.C, cname)
 	return
 }
+
 func (b Builder) CreateAlloca(t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildAlloca(b.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateArrayAlloca(t Type, val Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildArrayAlloca(b.C, t.C, val.C, cname)
 	return
 }
+
 func (b Builder) CreateFree(p Value) (v Value) {
 	v.C = C.LLVMBuildFree(b.C, p.C)
 	return
 }
+
 func (b Builder) CreateLoad(t Type, p Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildLoad2(b.C, t.C, p.C, cname)
 	return
 }
+
 func (b Builder) CreateStore(val Value, p Value) (v Value) {
 	v.C = C.LLVMBuildStore(b.C, val.C, p.C)
 	return
 }
+
 func (b Builder) CreateGEP(t Type, p Value, indices []Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1708,6 +1804,7 @@ func (b Builder) CreateGEP(t Type, p Value, indices []Value, name string) (v Val
 	v.C = C.LLVMBuildGEP2(b.C, t.C, p.C, ptr, nvals, cname)
 	return
 }
+
 func (b Builder) CreateInBoundsGEP(t Type, p Value, indices []Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1715,12 +1812,14 @@ func (b Builder) CreateInBoundsGEP(t Type, p Value, indices []Value, name string
 	v.C = C.LLVMBuildInBoundsGEP2(b.C, t.C, p.C, ptr, nvals, cname)
 	return
 }
+
 func (b Builder) CreateStructGEP(t Type, p Value, i int, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildStructGEP2(b.C, t.C, p.C, C.unsigned(i), cname)
 	return
 }
+
 func (b Builder) CreateGlobalString(str, name string) (v Value) {
 	cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(cstr))
@@ -1729,6 +1828,7 @@ func (b Builder) CreateGlobalString(str, name string) (v Value) {
 	v.C = C.LLVMBuildGlobalString(b.C, cstr, cname)
 	return
 }
+
 func (b Builder) CreateGlobalStringPtr(str, name string) (v Value) {
 	cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(cstr))
@@ -1737,10 +1837,12 @@ func (b Builder) CreateGlobalStringPtr(str, name string) (v Value) {
 	v.C = C.LLVMBuildGlobalStringPtr(b.C, cstr, cname)
 	return
 }
+
 func (b Builder) CreateAtomicRMW(op AtomicRMWBinOp, ptr, val Value, ordering AtomicOrdering, singleThread bool) (v Value) {
 	v.C = C.LLVMBuildAtomicRMW(b.C, C.LLVMAtomicRMWBinOp(op), ptr.C, val.C, C.LLVMAtomicOrdering(ordering), boolToLLVMBool(singleThread))
 	return
 }
+
 func (b Builder) CreateAtomicCmpXchg(ptr, cmp, newVal Value, successOrdering, failureOrdering AtomicOrdering, singleThread bool) (v Value) {
 	v.C = C.LLVMBuildAtomicCmpXchg(b.C, ptr.C, cmp.C, newVal.C, C.LLVMAtomicOrdering(successOrdering), C.LLVMAtomicOrdering(failureOrdering), boolToLLVMBool(singleThread))
 	return
@@ -1753,90 +1855,105 @@ func (b Builder) CreateTrunc(val Value, t Type, name string) (v Value) {
 	v.C = C.LLVMBuildTrunc(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateZExt(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildZExt(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateSExt(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSExt(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateFPToUI(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFPToUI(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateFPToSI(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFPToSI(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateUIToFP(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildUIToFP(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateSIToFP(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSIToFP(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateFPTrunc(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFPTrunc(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateFPExt(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildFPExt(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreatePtrToInt(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildPtrToInt(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateIntToPtr(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildIntToPtr(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateBitCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildBitCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateZExtOrBitCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildZExtOrBitCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateSExtOrBitCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildSExtOrBitCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateTruncOrBitCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildTruncOrBitCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateCast(val Value, op Opcode, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1849,12 +1966,14 @@ func (b Builder) CreatePointerCast(val Value, t Type, name string) (v Value) {
 	v.C = C.LLVMBuildPointerCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateIntCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildIntCast(b.C, val.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateFPCast(val Value, t Type, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1869,6 +1988,7 @@ func (b Builder) CreateICmp(pred IntPredicate, lhs, rhs Value, name string) (v V
 	v.C = C.LLVMBuildICmp(b.C, C.LLVMIntPredicate(pred), lhs.C, rhs.C, cname)
 	return
 }
+
 func (b Builder) CreateFCmp(pred FloatPredicate, lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1883,6 +2003,7 @@ func (b Builder) CreatePHI(t Type, name string) (v Value) {
 	v.C = C.LLVMBuildPhi(b.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateCall(t Type, fn Value, args []Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1904,30 +2025,35 @@ func (b Builder) CreateVAArg(list Value, t Type, name string) (v Value) {
 	v.C = C.LLVMBuildVAArg(b.C, list.C, t.C, cname)
 	return
 }
+
 func (b Builder) CreateExtractElement(vec, i Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildExtractElement(b.C, vec.C, i.C, cname)
 	return
 }
+
 func (b Builder) CreateInsertElement(vec, elt, i Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildInsertElement(b.C, vec.C, elt.C, i.C, cname)
 	return
 }
+
 func (b Builder) CreateShuffleVector(v1, v2, mask Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildShuffleVector(b.C, v1.C, v2.C, mask.C, cname)
 	return
 }
+
 func (b Builder) CreateExtractValue(agg Value, i int, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildExtractValue(b.C, agg.C, C.unsigned(i), cname)
 	return
 }
+
 func (b Builder) CreateInsertValue(agg, elt Value, i int, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -1941,12 +2067,14 @@ func (b Builder) CreateIsNull(val Value, name string) (v Value) {
 	v.C = C.LLVMBuildIsNull(b.C, val.C, cname)
 	return
 }
+
 func (b Builder) CreateIsNotNull(val Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	v.C = C.LLVMBuildIsNotNull(b.C, val.C, cname)
 	return
 }
+
 func (b Builder) CreatePtrDiff(t Type, lhs, rhs Value, name string) (v Value) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -2002,6 +2130,15 @@ func NewMemoryBufferFromStdin() (b MemoryBuffer, err error) {
 		C.LLVMDisposeMessage(cmsg)
 	}
 	return
+}
+
+func NewMemoryBufferFromRangeCopy(data []byte) MemoryBuffer {
+	cData := (*C.char)(unsafe.Pointer(&data[0]))
+	cDataLen := C.size_t(len(data))
+	name := C.CString("")
+	buff := C.LLVMCreateMemoryBufferWithMemoryRangeCopy(cData, cDataLen, name)
+	C.free(unsafe.Pointer(name))
+	return MemoryBuffer{C: buff}
 }
 
 func (b MemoryBuffer) Bytes() []byte {
